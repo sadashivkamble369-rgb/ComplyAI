@@ -12,7 +12,9 @@ import {
   FileCheck2,
   X,
   ArrowRight,
+  ArrowLeft,
   Loader2,
+
   CheckCircle2,
   ScanText,
   GitCompare,
@@ -1334,7 +1336,139 @@ const formatCurrentDateTime = () => {
   return `${day} ${month} ${year}, ${formattedHours}:${minutes} ${ampm}`;
 };
 
+const PageNavFooter = ({ currentTab, onNavigate }) => {
+  const pageMap = {
+    dashboard: {
+      prevId: "recommendations", prevLabel: "Recommendations",
+      nextId: "regulations", nextLabel: "Regulations & Context", step: "Step 1 of 5"
+    },
+    regulations: {
+      prevId: "dashboard", prevLabel: "Dashboard Overview",
+      nextId: "documents", nextLabel: "Documents & Upload", step: "Step 2 of 5"
+    },
+    organization: {
+      prevId: "dashboard", prevLabel: "Dashboard Overview",
+      nextId: "documents", nextLabel: "Documents & Upload", step: "Step 2 of 5"
+    },
+    documents: {
+      prevId: "regulations", prevLabel: "Regulations & Context",
+      nextId: "analysis", nextLabel: "Deep Gap Analysis", step: "Step 3 of 5"
+    },
+    workspace: {
+      prevId: "regulations", prevLabel: "Regulations & Context",
+      nextId: "analysis", nextLabel: "Deep Gap Analysis", step: "Step 3 of 5"
+    },
+    analysis: {
+      prevId: "documents", prevLabel: "Documents & Upload",
+      nextId: "reports", nextLabel: "Executive Reports", step: "Step 4 of 5"
+    },
+    reports: {
+      prevId: "analysis", prevLabel: "Deep Gap Analysis",
+      nextId: "recommendations", nextLabel: "AI Recommendations", step: "Step 5 of 5"
+    },
+    report: {
+      prevId: "analysis", prevLabel: "Deep Gap Analysis",
+      nextId: "recommendations", nextLabel: "AI Recommendations", step: "Step 5 of 5"
+    },
+    recommendations: {
+      prevId: "reports", prevLabel: "Executive Reports",
+      nextId: "dashboard", nextLabel: "Dashboard Overview", step: "Complete"
+    },
+  };
+
+  const currentInfo = pageMap[currentTab];
+  if (!currentInfo) return null;
+
+  return (
+    <div
+      className="page-nav-footer-bar"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginTop: "32px",
+        padding: "16px 24px",
+        background: "rgba(17, 24, 39, 0.85)",
+        backdropFilter: "blur(12px)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        borderRadius: "14px",
+        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)",
+      }}
+    >
+      {/* Previous / Back Button */}
+      <button
+        type="button"
+        onClick={() => onNavigate(currentInfo.prevId)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          padding: "10px 20px",
+          background: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+          color: "#ffffff",
+          border: "none",
+          borderRadius: "10px",
+          fontWeight: "600",
+          fontSize: "13.5px",
+          cursor: "pointer",
+          boxShadow: "0 4px 14px rgba(99, 102, 241, 0.4)",
+          transition: "all 0.25s ease",
+        }}
+      >
+        <ArrowLeft size={17} />
+        <span>Back: {currentInfo.prevLabel}</span>
+      </button>
+
+
+      {/* Step Badge Indicator */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <span
+          style={{
+            fontSize: "11px",
+            fontWeight: "700",
+            color: "#38bdf8",
+            background: "rgba(56, 189, 248, 0.12)",
+            border: "1px solid rgba(56, 189, 248, 0.3)",
+            padding: "3px 10px",
+            borderRadius: "20px",
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+          }}
+        >
+          {currentInfo.step}
+        </span>
+      </div>
+
+      {/* Next Button */}
+      <button
+        type="button"
+        onClick={() => onNavigate(currentInfo.nextId)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          padding: "10px 22px",
+          background: "linear-gradient(135deg, #2563eb, #3b82f6)",
+          color: "#ffffff",
+          border: "none",
+          borderRadius: "10px",
+          fontWeight: "600",
+          fontSize: "13.5px",
+          cursor: "pointer",
+          boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)",
+          transition: "all 0.25s ease",
+        }}
+      >
+        <span>Next: {currentInfo.nextLabel}</span>
+        <ArrowRight size={17} />
+      </button>
+    </div>
+  );
+};
+
+
 const App = () => {
+
   const [userName, setUserName] = useState("Suryansh Pandey");
   const [userEmail, setUserEmail] = useState("suryansh@gmail.com");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -1382,19 +1516,34 @@ const App = () => {
     setAuditRef("");
   };
 
+  const isOrgDataComplete = useMemo(() => {
+    return Boolean(
+      orgData.companyName?.trim() &&
+      orgData.industry?.trim() &&
+      orgData.headquartersCountry?.trim() &&
+      orgData.complianceFrameworks &&
+      orgData.complianceFrameworks.length > 0
+    );
+  }, [orgData]);
+
   const missingFields = useMemo(() => {
     const missing = [];
-    if (!companyPolicy) missing.push("company policy PDF");
-    if (!regulationDocument) missing.push("regulation PDF");
+    if (!orgData.companyName?.trim()) missing.push("Company Name");
+    if (!orgData.industry?.trim()) missing.push("Industry");
+    if (!orgData.headquartersCountry?.trim()) missing.push("Headquarters Country");
+    if (!orgData.complianceFrameworks || orgData.complianceFrameworks.length === 0) missing.push("Compliance Framework");
+    if (!companyPolicy) missing.push("Company Policy PDF");
+    if (!regulationDocument) missing.push("Regulation PDF");
     return missing;
-  }, [companyPolicy, regulationDocument]);
+  }, [orgData, companyPolicy, regulationDocument]);
 
-  const canAnalyze = Boolean(companyPolicy && regulationDocument);
+  const canAnalyze = Boolean(companyPolicy && regulationDocument && isOrgDataComplete);
 
   const missingFieldsHint =
     missingFields.length > 0
-      ? `Upload ${missingFields.join(" and ")} to run analysis.`
+      ? `Please complete ${missingFields.join(", ")} before running analysis.`
       : "Everything looks good — ready when you are.";
+
 
   const handleAnalyze = useCallback(async () => {
     if (!canAnalyze) return;
@@ -1652,7 +1801,11 @@ const App = () => {
               />
             </div>
           )}
+
+          {/* Persistent Next Page Workflow Navigation Footer Bar */}
+          <PageNavFooter currentTab={activeTab} onNavigate={(nextView) => setActiveTab(nextView)} />
         </main>
+
 
         <Footer />
       </div>

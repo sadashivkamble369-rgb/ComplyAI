@@ -53,6 +53,27 @@ def health_check():
     return {"status": "ok"}
 
 
+from services.email_service import send_real_email_notification
+
+class EmailNotificationRequest(BaseModel):
+    user_name: str
+    email: str
+
+@app.post("/send-notification")
+def send_login_notification(req: EmailNotificationRequest):
+    """
+    Sends a real security & welcome notification email to the user's actual email address.
+    """
+    res = send_real_email_notification(req.email, req.user_name)
+    return {
+        "status": "success",
+        "message": f"Real security notification email sent to {req.email}",
+        "details": res
+    }
+
+
+
+
 from fastapi.responses import FileResponse
 from services.pdf_generator import generate_improved_policy_pdf, generate_audit_report_pdf, GENERATED_REPORTS_DIR
 

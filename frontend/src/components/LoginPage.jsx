@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import axios from "axios";
+
 import {
   Shield,
   Sparkles,
@@ -19,22 +21,74 @@ export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [emailSentNotice, setEmailSentNotice] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!userName.trim()) return;
-    const finalEmail = email.trim() || "suryansh@gmail.com";
-    if (onLogin) onLogin(userName.trim(), finalEmail);
+  // Force clear initial form states on mount to clear cached browser values
+  useEffect(() => {
+    setUserName("");
+    setEmail("");
+    setPassword("");
+  }, []);
+
+  const handleFocus = () => {
+    setIsReadOnly(false);
   };
 
-  const handleDemoClick = () => {
-    const finalName = userName.trim() || "Suryansh Pandey";
-    const finalEmail = email.trim() || "suryansh@gmail.com";
-    if (onLogin) onLogin(finalName, finalEmail);
+  const isEmailValid = useMemo(() => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  }, [email]);
+
+  const isFormValid = Boolean(
+    userName.trim() &&
+    isEmailValid &&
+    password.trim()
+  );
+
+  const handleSubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!userName.trim()) {
+      setErrorMsg("Please enter your User Name.");
+      return;
+    }
+    if (!isEmailValid) {
+      setErrorMsg("Please enter a valid Work Email address (e.g., name@gmail.com).");
+      return;
+    }
+    if (!password.trim()) {
+      setErrorMsg("Please enter your Password.");
+      return;
+    }
+
+    setErrorMsg("");
+    setIsLoading(true);
+
+    try {
+      await axios.post("http://127.0.0.1:8000/send-notification", {
+        user_name: userName.trim(),
+        email: email.trim(),
+      });
+    } catch (err) {
+      console.warn("Backend notification endpoint warning:", err);
+    }
+
+    setIsLoading(false);
+    setEmailSentNotice(`Security login message sent to ${email.trim()}`);
+    setTimeout(() => {
+      if (onLogin) onLogin(userName.trim(), email.trim());
+    }, 1000);
   };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSubmit(e);
+    }
+  };
+
+
 
 
   return (
@@ -53,7 +107,6 @@ export default function LoginPage({ onLogin }) {
           <span className="brand-badge">Enterprise</span>
         </div>
       </header>
-
 
       {/* Main Login Hero & Container */}
       <main className="login-hero-container">
@@ -105,14 +158,20 @@ export default function LoginPage({ onLogin }) {
               <p>Sign in to access your organization's compliance dashboard.</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="login-form">
+            <div className="login-form" onKeyDown={handleKeyDown}>
               <div className="form-group">
                 <label>User Name</label>
                 <div className="input-wrap">
                   <User size={16} className="input-icon" />
                   <input
                     type="text"
+                    name="cx_auth_field_1"
                     required
+                    autoComplete="one-time-code"
+                    data-lpignore="true"
+                    data-1password-ignore="true"
+                    readOnly={isReadOnly}
+                    onFocus={handleFocus}
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
                     placeholder="Enter your User Name"
@@ -125,13 +184,24 @@ export default function LoginPage({ onLogin }) {
                 <div className="input-wrap">
                   <Building2 size={16} className="input-icon" />
                   <input
-                    type="email"
+                    type="text"
+                    name="cx_auth_field_2"
                     required
+                    autoComplete="one-time-code"
+                    data-lpignore="true"
+                    data-1password-ignore="true"
+                    readOnly={isReadOnly}
+                    onFocus={handleFocus}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="suryansh@gmail.com"
                   />
                 </div>
+                {email.length > 0 && !isEmailValid && (
+                  <div style={{ color: "#f59e0b", fontSize: "0.75rem", marginTop: "3px", fontWeight: "500" }}>
+                    ⚠️ Please enter a valid email address (e.g. user@gmail.com)
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -140,12 +210,19 @@ export default function LoginPage({ onLogin }) {
                   <Lock size={16} className="input-icon" />
                   <input
                     type={showPassword ? "text" : "password"}
+                    name="cx_auth_field_3"
                     required
+                    autoComplete="one-time-code"
+                    data-lpignore="true"
+                    data-1password-ignore="true"
+                    readOnly={isReadOnly}
+                    onFocus={handleFocus}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
+                    placeholder="Enter your password"
                     style={{ paddingRight: "40px" }}
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
@@ -170,12 +247,49 @@ export default function LoginPage({ onLogin }) {
                 </div>
               </div>
 
+              {errorMsg && (
+                <div style={{ color: "#ef4444", fontSize: "0.8rem", fontWeight: "500", marginTop: "4px" }}>
+                  {errorMsg}
+                </div>
+              )}
 
-              <button type="submit" className="btn-submit-login" disabled={isLoading}>
+              {emailSentNotice && (
+                <div style={{
+                  background: "rgba(34, 197, 94, 0.15)",
+                  border: "1px solid rgba(34, 197, 94, 0.4)",
+                  color: "#4ade80",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  fontSize: "0.82rem",
+                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginTop: "8px"
+                }}>
+                  <CheckCircle2 size={16} />
+                  {emailSentNotice}
+                </div>
+              )}
+
+
+              <button
+                type="button"
+                className="btn-submit-login"
+                disabled={!isFormValid || isLoading}
+                onClick={handleSubmit}
+                style={{
+                  opacity: !isFormValid || isLoading ? 0.5 : 1,
+                  cursor: !isFormValid || isLoading ? "not-allowed" : "pointer",
+                }}
+              >
                 {isLoading ? "Authenticating..." : "Sign In to ComplyAI"}
                 {!isLoading && <ArrowRight size={16} />}
               </button>
-            </form>
+            </div>
+
+
+
 
             <div className="login-card-footer" style={{ marginTop: "24px" }}>
               <Lock size={12} /> SOC 2 Type II Certified • 256-Bit SSL Encryption

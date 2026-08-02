@@ -48,12 +48,13 @@ export default function SidebarNav({
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "documents", label: "Documents", icon: Folder },
     { id: "regulations", label: "Regulations", icon: BookOpen },
+    { id: "documents", label: "Documents", icon: Folder },
     { id: "analysis", label: "Analysis", icon: Search },
     { id: "reports", label: "Reports", icon: FileCheck },
     { id: "recommendations", label: "Recommendations", icon: Sparkles },
   ];
+
 
   const orgs = ["Acme Global Enterprise", "Globex Corporation", "Umbrella Corp"];
 
