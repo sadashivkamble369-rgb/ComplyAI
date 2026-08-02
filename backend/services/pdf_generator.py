@@ -302,7 +302,7 @@ def generate_improved_policy_pdf(analysis_result: dict, org_data: dict, output_d
     audit_date = datetime.now().strftime("%B %d, %Y")
     score = analysis_result.get("compliance_score", "N/A")
     risk = str(analysis_result.get("risk_level", "Medium")).capitalize()
-    revised_policy = analysis_result.get("revised_policy") or "No revised policy content generated."
+    revised_policy = analysis_result.get("revised_policy") or analysis_result.get("revised_policy_text") or "No revised policy content generated."
 
     story = []
 
@@ -611,12 +611,13 @@ def generate_audit_report_pdf(analysis_result: dict, org_data: dict, output_dir:
     story.append(Spacer(1, 14))
 
     next_actions_data = [
-        [ListItem(Paragraph("Distribute the <b>Improved Company Policy</b> document to legal counsel for final validation.", styles["ListItem"]))],
-        [ListItem(Paragraph("Incorporate recommended risk controls into operational procedures.", styles["ListItem"]))],
-        [ListItem(Paragraph("Archive this audit report for compliance evidence and regulatory inquiry.", styles["ListItem"]))],
+        ListItem(Paragraph("Distribute the <b>Improved Company Policy</b> document to legal counsel for final validation.", styles["ListItem"])),
+        ListItem(Paragraph("Incorporate recommended risk controls into operational procedures.", styles["ListItem"])),
+        ListItem(Paragraph("Archive this audit report for compliance evidence and regulatory inquiry.", styles["ListItem"])),
     ]
     story.append(Paragraph("<b>Next Recommended Actions:</b>", styles["SubSectionHeading"]))
     story.append(ListFlowable(next_actions_data, bulletType="bullet", start="check", spaceAfter=14))
+
 
     doc.build(story, canvasmaker=NumberedCanvas)
     logger.info("Generated Audit Report PDF at: %s", file_path)

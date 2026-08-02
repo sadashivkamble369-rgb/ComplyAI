@@ -30,6 +30,16 @@ app.add_middleware(
 )
 
 
+from pydantic import BaseModel
+from typing import Optional, Dict, Any
+from services.pdf_generator import GENERATED_REPORTS_DIR
+from services.gemini_service import answer_compliance_question
+
+
+class ChatRequest(BaseModel):
+    prompt: str
+    context: Optional[Dict[str, Any]] = None
+
 @app.get("/")
 def read_root():
     return {
@@ -43,4 +53,10 @@ def health_check():
     return {"status": "ok"}
 
 
-app.include_router(router)
+@app.post("/chat")
+def chat_endpoint(request: ChatRequest):
+    reply = answer_compliance_question(request.prompt, request.context)
+    return {"reply": reply}
+
+
+app.include_router(router)

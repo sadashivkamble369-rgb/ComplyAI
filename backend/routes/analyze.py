@@ -55,14 +55,9 @@ def _validate_pdf(file: UploadFile, field_name: str) -> None:
             detail=f"Invalid file extension for '{field_name}'. Only PDF files (.pdf) are allowed.",
         )
 
-    if file.content_type != ALLOWED_CONTENT_TYPE:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                f"Invalid content type for '{field_name}'. "
-                f"Expected '{ALLOWED_CONTENT_TYPE}', got '{file.content_type}'."
-            ),
-        )
+    if file.content_type and "pdf" not in file.content_type.lower() and file.content_type != "application/octet-stream":
+        logger.warning(f"Non-standard content-type for '{field_name}': {file.content_type}, proceeding based on .pdf extension.")
+
 
 
 async def _save_pdf_file(file: UploadFile, destination: Path) -> None:

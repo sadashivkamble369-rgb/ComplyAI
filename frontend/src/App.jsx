@@ -1,5 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import axios from "axios";
+import LoginPage from "./components/LoginPage";
+
 import {
   Shield,
   ShieldCheck,
@@ -37,9 +39,31 @@ import {
   Search,
   Check,
 } from "lucide-react";
+
+const LinkedInIcon = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.75a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88Z" />
+  </svg>
+);
+
+
+import Navbar from "./components/Navbar";
+import SidebarNav from "./components/SidebarNav";
+import TopHeader from "./components/TopHeader";
+import ExecutiveDashboard from "./components/ExecutiveDashboard";
+import AnalysisView from "./components/AnalysisView";
+import ReportsView from "./components/ReportsView";
+import RecommendationsView from "./components/RecommendationsView";
 import ClauseImprovements from "./components/ClauseImprovements";
 import RevisedPolicyViewer from "./components/RevisedPolicyViewer";
+import AIAssistant from "./components/AIAssistant";
+import UpgradeModal from "./components/UpgradeModal";
 import "./App.css";
+
+
+
+
+
 
 /* ==================================================
    BACKEND CONTRACT — DO NOT MODIFY
@@ -720,41 +744,12 @@ const OrganizationCard = ({ orgData, onFieldChange }) => (
   </section>
 );
 
-/* ==================================================
-   NAVBAR
-================================================== */
-const Navbar = () => (
-  <header className="navbar">
-    <div className="navbar-inner">
-      <div className="navbar-brand">
-        <span className="brand-mark" aria-hidden="true">
-          <Shield size={20} strokeWidth={2.25} />
-          <span className="brand-mark-pulse" />
-        </span>
-        <span className="brand-name">ComplyAI</span>
-        <span className="ai-badge">
-          <Sparkles size={12} aria-hidden="true" />
-          AI Engine
-        </span>
-      </div>
-      <nav className="navbar-links" aria-label="Primary">
-        <a href="#organization">Organization</a>
-        <a href="#workspace">Workspace</a>
-        <a href="#features">Platform</a>
-        <a href="#results">Reports</a>
-      </nav>
-      <div className="engine-status" role="status">
-        <span className="status-dot" aria-hidden="true" />
-        Engine online
-      </div>
-    </div>
-  </header>
-);
+
 
 /* ==================================================
    HERO
 ================================================== */
-const Hero = ({ onStart }) => (
+const Hero = ({ onWorkspace, onOrganization }) => (
   <section className="hero">
     <div className="hero-backdrop" aria-hidden="true">
       <div className="hero-grid" />
@@ -777,25 +772,27 @@ const Hero = ({ onStart }) => (
         audit in seconds.
       </p>
       <div className="hero-actions">
-        <button className="btn btn-primary btn-large" onClick={onStart}>
-          Start an analysis
+        <button className="btn btn-primary btn-large" onClick={onOrganization}>
+          Configure Organization
           <ArrowRight size={18} aria-hidden="true" />
         </button>
-        <div className="hero-badges">
-          <span className="feature-badge">
-            <FileCheck2 size={14} aria-hidden="true" /> PDF native
-          </span>
-          <span className="feature-badge">
-            <ShieldCheck size={14} aria-hidden="true" /> SOC 2-aligned handling
-          </span>
-          <span className="feature-badge">
-            <Clock size={14} aria-hidden="true" /> Results in seconds
-          </span>
-        </div>
+      </div>
+
+      <div className="hero-badges">
+        <span className="feature-badge">
+          <FileCheck2 size={14} aria-hidden="true" /> PDF native
+        </span>
+        <span className="feature-badge">
+          <ShieldCheck size={14} aria-hidden="true" /> SOC 2-aligned handling
+        </span>
+        <span className="feature-badge">
+          <Clock size={14} aria-hidden="true" /> Results in seconds
+        </span>
       </div>
     </div>
   </section>
 );
+
 
 /* ==================================================
    STATISTICS
@@ -1095,11 +1092,22 @@ const ResultsDashboard = ({ analysis, auditRef, onReset }) => {
     summary = "",
     missing_requirements: missingRequirements = [],
     recommendations = [],
-    improved_clauses: improvedClauses = [],
-    revised_policy: revisedPolicy = "",
+    improved_clauses: improvedClausesRaw = [],
+    clause_improvements: clauseImprovementsRaw = [],
+    revised_policy: revisedPolicyRaw = "",
+    revised_policy_text: revisedPolicyTextRaw = "",
     policy_pdf_url: policyPdfUrl = "",
     audit_report_url: auditReportUrl = "",
   } = analysis || {};
+
+  const improvedClauses = useMemo(() => {
+    if (Array.isArray(clauseImprovementsRaw) && clauseImprovementsRaw.length > 0) return clauseImprovementsRaw;
+    if (Array.isArray(improvedClausesRaw) && improvedClausesRaw.length > 0) return improvedClausesRaw;
+    return [];
+  }, [clauseImprovementsRaw, improvedClausesRaw]);
+
+  const revisedPolicy = revisedPolicyTextRaw || revisedPolicyRaw || "";
+
 
   const normalizedRisk = normalizeRiskLevel(riskLevel);
   const riskMeta = RISK_META[normalizedRisk];
@@ -1245,11 +1253,12 @@ const ResultsDashboard = ({ analysis, auditRef, onReset }) => {
 
       <div className="verdict-bar">
         <span className={`verdict-dot severity-${normalizedRisk}`} aria-hidden="true" />
-        <span>
+        <span className="verdict-text">
           Overall verdict: <strong>{riskMeta.label}</strong> — {coverage}% compliant, {gapCount}{" "}
           requirement{gapCount === 1 ? "" : "s"} outstanding.
         </span>
         <button type="button" className="btn btn-ghost" onClick={onReset}>
+
           <RefreshCw size={15} aria-hidden="true" />
           Run another analysis
         </button>
@@ -1271,6 +1280,12 @@ const Footer = () => (
         <span className="brand-name">ComplyAI</span>
       </div>
       <p>Automated regulatory comparison for teams who cannot afford to guess.</p>
+
+      <div className="footer-credits">
+        <span>Designed & Engineered by <strong>Suryansh Pandey</strong></span>
+      </div>
+
+
       <p className="footer-fine">
         ComplyAI supports human review of every finding. Reports are decision support, not legal advice.
       </p>
@@ -1278,22 +1293,47 @@ const Footer = () => (
   </footer>
 );
 
+
 /* ==================================================
    ROOT APP
 ================================================== */
 const DEFAULT_ORG_DATA = {
-  companyName: "",
-  industry: "",
-  headquartersCountry: "",
-  expansionCountry: "",
-  state: "",
+  companyName: "Acme Global Enterprise",
+  industry: "Technology",
+  headquartersCountry: "United States",
+  expansionCountry: "United States",
+  state: "California",
   companySize: COMPANY_SIZES[0].id,
-  complianceFrameworks: [],
+  complianceFrameworks: ["GDPR"],
   riskAppetite: RISK_APPETITES[1].id,
   auditYear: AUDIT_YEARS[1],
 };
 
+const formatCurrentDateTime = () => {
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, "0");
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = monthNames[now.getMonth()];
+  const year = now.getFullYear();
+  let hours = now.getHours();
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const formattedHours = String(hours).padStart(2, "0");
+  return `${day} ${month} ${year}, ${formattedHours}:${minutes} ${ampm}`;
+};
+
 const App = () => {
+  const [userName, setUserName] = useState("Suryansh Pandey");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginTimestamp, setLoginTimestamp] = useState(formatCurrentDateTime());
+  const [activeTab, setActiveTab] = useState("dashboard"); // dashboard | platform | organization | workspace | report | documents | regulations | analysis | recommendations
+
+
+
+
+
   const [orgData, setOrgData] = useState(DEFAULT_ORG_DATA);
   const [companyPolicy, setCompanyPolicy] = useState(null);
   const [regulationDocument, setRegulationDocument] = useState(null);
@@ -1302,6 +1342,10 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [activeStageIndex, setActiveStageIndex] = useState(0);
   const [auditRef, setAuditRef] = useState("");
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+
 
   const stageIntervalRef = useRef(null);
 
@@ -1328,27 +1372,23 @@ const App = () => {
 
   const missingFields = useMemo(() => {
     const missing = [];
-    if (!orgData.companyName.trim()) missing.push("company name");
-    if (!orgData.industry) missing.push("industry");
-    if (!orgData.headquartersCountry) missing.push("headquarters country");
-    if (!orgData.expansionCountry) missing.push("expansion country");
-    if (orgData.complianceFrameworks.length === 0) missing.push("compliance framework");
     if (!companyPolicy) missing.push("company policy PDF");
     if (!regulationDocument) missing.push("regulation PDF");
     return missing;
-  }, [orgData, companyPolicy, regulationDocument]);
+  }, [companyPolicy, regulationDocument]);
 
-  const canAnalyze = missingFields.length === 0;
+  const canAnalyze = Boolean(companyPolicy && regulationDocument);
 
   const missingFieldsHint =
     missingFields.length > 0
-      ? `Add ${missingFields.slice(0, 3).join(", ")}${missingFields.length > 3 ? ", and more" : ""} to continue.`
-      : "";
+      ? `Upload ${missingFields.join(" and ")} to run analysis.`
+      : "Everything looks good — ready when you are.";
 
   const handleAnalyze = useCallback(async () => {
     if (!canAnalyze) return;
 
     setStatus("processing");
+    setActiveTab("report");
     setErrorMessage("");
     setActiveStageIndex(0);
 
@@ -1363,15 +1403,16 @@ const App = () => {
     const formData = new FormData();
     formData.append("company_policy", companyPolicy);
     formData.append("regulation_document", regulationDocument);
-    formData.append("company_name", orgData.companyName);
-    formData.append("industry", orgData.industry);
-    formData.append("headquarters_country", orgData.headquartersCountry);
-    formData.append("expansion_country", orgData.expansionCountry);
-    formData.append("state", orgData.state);
-    formData.append("company_size", orgData.companySize);
-    formData.append("compliance_framework", orgData.complianceFrameworks.join(", "));
-    formData.append("risk_appetite", orgData.riskAppetite);
-    formData.append("audit_year", orgData.auditYear);
+    formData.append("company_name", orgData.companyName?.trim() || "Acme Global Enterprise");
+    formData.append("industry", orgData.industry || "Technology");
+    formData.append("headquarters_country", orgData.headquartersCountry || "United States");
+    formData.append("expansion_country", orgData.expansionCountry || "United States");
+    formData.append("state", orgData.state || "California");
+    formData.append("company_size", orgData.companySize || "startup");
+    formData.append("compliance_framework", (orgData.complianceFrameworks && orgData.complianceFrameworks.length > 0) ? orgData.complianceFrameworks.join(", ") : "GDPR");
+    formData.append("risk_appetite", orgData.riskAppetite || "balanced");
+    formData.append("audit_year", orgData.auditYear || "2026");
+
 
     try {
       const response = await axios.post(API_ENDPOINT, formData, {
@@ -1388,50 +1429,215 @@ const App = () => {
       }, 700);
     } catch (error) {
       clearInterval(stageIntervalRef.current);
+      const resDetail = error?.response?.data?.detail;
+      const detailMsg = typeof resDetail === "string" ? resDetail : Array.isArray(resDetail) ? resDetail[0]?.msg : null;
       const message =
+        detailMsg ||
         error?.response?.data?.message ||
         error?.message ||
         "The analysis could not be completed. Please try again.";
+
       setErrorMessage(message);
       setStatus("error");
     }
   }, [canAnalyze, companyPolicy, regulationDocument, orgData]);
 
+  const handlePDFDownload = async (type = "audit_report") => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/download/${type}?ref=${auditRef || "sample"}`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${type}_${auditRef || "complyai"}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      window.print();
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <LoginPage
+        onLogin={(name) => {
+          if (name) setUserName(name);
+          setLoginTimestamp(formatCurrentDateTime());
+          setIsAuthenticated(true);
+          setActiveTab("dashboard");
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="app-shell">
-      <Navbar />
-      <main>
-        <Hero
-          onStart={() => document.getElementById("organization")?.scrollIntoView({ behavior: "smooth" })}
+    <div className="app-layout-shell" style={{ display: "flex", minHeight: "100vh", background: "#090d16" }}>
+
+      {/* Left Sidebar */}
+      <SidebarNav
+        activeView={activeTab}
+        onViewChange={setActiveTab}
+        activeOrg={orgData.companyName || "Acme Global Enterprise"}
+        onOrgChange={(name) => handleOrgFieldChange("companyName", name)}
+        onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
+        isOpen={isSidebarOpen}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        onLogout={() => setIsAuthenticated(false)}
+        userName={userName}
+      />
+
+
+      {/* Main Content Area */}
+      <div className="main-viewport-area" style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflowX: "hidden" }}>
+        {/* Top Header Bar */}
+        <TopHeader
+          orgName={orgData.companyName || "Acme Global Enterprise"}
+          userName={userName}
+          onDownloadReport={() => handlePDFDownload("audit_report")}
+          onShareReport={() => {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Report link copied to clipboard!");
+          }}
+          onOpenWorkspace={() => setActiveTab("workspace")}
+          onNavigate={(view) => setActiveTab(view)}
+          onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
+          onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+          onLogout={() => setIsAuthenticated(false)}
+          onLogin={() => setIsAuthenticated(false)}
         />
-        <StatsSection />
-        <FeaturesSection />
 
-        <OrganizationCard orgData={orgData} onFieldChange={handleOrgFieldChange} />
+        <main className="tab-content-area" style={{ padding: "24px", flex: 1 }}>
+          {/* TAB 0: EXECUTIVE COMPLIANCE DASHBOARD */}
+          {activeTab === "dashboard" && (
+            <ExecutiveDashboard
+              analysis={analysis}
+              companyPolicyName={companyPolicy ? companyPolicy.name : "Company Policy.pdf"}
+              regulationName={regulationDocument ? regulationDocument.name : "GDPR.pdf"}
+              completedTimestamp={loginTimestamp}
+              onOpenCopilot={() => {}}
+              onGenerateClause={() => setActiveTab("recommendations")}
+              onViewFixGap={() => setActiveTab("analysis")}
+            />
+          )}
 
-        <UploadWorkspace
-          companyPolicy={companyPolicy}
-          regulationDocument={regulationDocument}
-          onCompanyPolicy={setCompanyPolicy}
-          onRegulationDocument={setRegulationDocument}
-          onRemoveCompanyPolicy={() => setCompanyPolicy(null)}
-          onRemoveRegulationDocument={() => setRegulationDocument(null)}
-          onAnalyze={handleAnalyze}
-          status={status}
-          errorMessage={errorMessage}
-          canAnalyze={canAnalyze}
-          missingFieldsHint={missingFieldsHint}
-        />
 
-        {status === "processing" && <ProcessingDashboard activeStageIndex={activeStageIndex} />}
+          {/* TAB 1: DEDICATED AUDIT & RISK ANALYSIS VIEW */}
+          {activeTab === "analysis" && (
+            <AnalysisView
+              analysis={analysis}
+              onViewFixGap={(sec) => setActiveTab("recommendations")}
+            />
+          )}
 
-        {status === "results" && analysis && (
-          <ResultsDashboard analysis={analysis} auditRef={auditRef} onReset={resetWorkspace} />
-        )}
-      </main>
-      <Footer />
+          {/* TAB 2: DEDICATED EXECUTIVE REPORTS & EXPORT HUB VIEW */}
+          {(activeTab === "reports" || activeTab === "report") && (
+            <div className="tab-pane">
+              {status === "processing" && (
+                <ProcessingDashboard activeStageIndex={activeStageIndex} />
+              )}
+
+              {status === "results" && analysis ? (
+                <ResultsDashboard
+                  analysis={analysis}
+                  auditRef={auditRef}
+                  onReset={() => {
+                    resetWorkspace();
+                    setActiveTab("workspace");
+                  }}
+                />
+              ) : (
+                <ReportsView
+                  analysis={analysis}
+                  auditRef={auditRef}
+                  onDownloadPDF={handlePDFDownload}
+                />
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: DEDICATED AI RECOMMENDATIONS & CLAUSE SYNTHESIZER VIEW */}
+          {activeTab === "recommendations" && (
+            <RecommendationsView
+              analysis={analysis}
+              onGenerateClause={(sec) => setActiveTab("report")}
+            />
+          )}
+
+          {/* TAB 4: PLATFORM OVERVIEW */}
+          {activeTab === "platform" && (
+            <div className="tab-pane">
+              <Hero
+                onWorkspace={() => setActiveTab("workspace")}
+                onOrganization={() => setActiveTab("organization")}
+              />
+              <StatsSection />
+              <FeaturesSection />
+              <div className="tab-nav-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary btn-large"
+                  onClick={() => setActiveTab("organization")}
+                >
+                  Configure Organization Context <ArrowRight size={16} aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: ORGANIZATION CONFIGURATION */}
+          {(activeTab === "organization" || activeTab === "regulations") && (
+            <div className="tab-pane">
+              <OrganizationCard orgData={orgData} onFieldChange={handleOrgFieldChange} />
+              <div className="tab-nav-footer">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setActiveTab("workspace")}
+                >
+                  2. Proceed to Workspace & Upload PDFs <ArrowRight size={16} aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: WORKSPACE & DOCUMENT UPLOAD */}
+          {(activeTab === "workspace" || activeTab === "documents") && (
+            <div className="tab-pane">
+              <UploadWorkspace
+                companyPolicy={companyPolicy}
+                regulationDocument={regulationDocument}
+                onCompanyPolicy={setCompanyPolicy}
+                onRegulationDocument={setRegulationDocument}
+                onRemoveCompanyPolicy={() => setCompanyPolicy(null)}
+                onRemoveRegulationDocument={() => setRegulationDocument(null)}
+                onAnalyze={handleAnalyze}
+                status={status}
+                errorMessage={errorMessage}
+                canAnalyze={canAnalyze}
+                missingFieldsHint={missingFieldsHint}
+              />
+            </div>
+          )}
+        </main>
+
+        <Footer />
+      </div>
+
+      <AIAssistant
+        analysisResult={analysis}
+        orgData={orgData}
+        onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
+      />
+
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+      />
     </div>
   );
 };
+
 
 export default App;

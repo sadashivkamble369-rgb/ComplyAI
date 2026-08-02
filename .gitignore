@@ -1,7 +1,40 @@
-node_modules/
-.env
-backend/.env
-frontend/.env
+
+
+# Python
 __pycache__/
-dist/
-build/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Environment variables / API keys
+.env
+.env.*
+
+# Generated reports
+backend/generated_reports/
+
+# User uploaded files
+backend/uploads/
+
+# Local test files
+backend/scratch/
+
+# Local PDFs
+backend/policy.pdf
+backend/regulation.pdf
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

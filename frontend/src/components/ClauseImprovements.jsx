@@ -35,11 +35,12 @@ export default function ClauseImprovements({ improvedClauses = [] }) {
       }
       return {
         id: `clause-${index}`,
-        issue: item.issue || item.problem || "Compliance issue identified",
-        reason: item.reason || item.explanation || "Added to address regulatory gap.",
+        issue: item.issue || item.section || item.problem || "Compliance issue identified",
+        reason: item.reason || item.gap || item.explanation || "Added to address regulatory gap.",
         original: item.original || item.original_clause || "N/A - Missing clause",
-        improved: item.improved || item.improved_clause || "N/A - No revised clause provided",
+        improved: item.improved || item.revised_clause || item.improved_clause || "N/A - No revised clause provided",
       };
+
     });
   }, [improvedClauses]);
 

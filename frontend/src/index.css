@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 *,
 *::before,
 *::after {
@@ -14,46 +16,53 @@ html {
   text-size-adjust: 100%;
   color-scheme: dark;
   scroll-behavior: smooth;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 :root {
-  --bg-base: #05070d;
-  --bg-elevated: #0a0e17;
-  --bg-sunken: #030409;
+  --bg-base: #0B1220;
+  --bg-elevated: #111827;
+  --bg-sunken: #080d17;
 
-  --surface-1: rgba(255, 255, 255, 0.03);
-  --surface-2: rgba(255, 255, 255, 0.05);
-  --surface-3: rgba(255, 255, 255, 0.07);
-  --surface-hover: rgba(255, 255, 255, 0.09);
+  --surface-1: rgba(255, 255, 255, 0.02);
+  --surface-2: rgba(255, 255, 255, 0.04);
+  --surface-3: rgba(255, 255, 255, 0.06);
+  --surface-hover: rgba(255, 255, 255, 0.08);
 
-  --card-bg: #0e1420;
-  --card-bg-elevated: #111826;
+  --card-bg: #111827;
+  --card-bg-elevated: #1a2234;
 
-  --glass-bg: rgba(14, 20, 32, 0.6);
-  --glass-bg-heavy: rgba(14, 20, 32, 0.82);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: 18px;
-  --glass-blur-heavy: 28px;
-  --glass-gradient: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01));
+  --glass-bg: rgba(17, 24, 39, 0.75);
+  --glass-bg-heavy: rgba(17, 24, 39, 0.92);
+  --glass-border: #1F2937;
+  --glass-blur: 16px;
 
-  --text-primary: #f3f5f9;
-  --text-secondary: #a6aec2;
-  --text-muted: #6c7488;
-  --text-disabled: #454b5c;
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-disabled: #4b5563;
 
-  --color-primary: #4f7cff;
-  --color-primary-hover: #6c8fff;
-  --color-accent: #8b6cf7;
+  --color-primary: #4F8CFF;
+  --color-primary-hover: #3b76e8;
+  --color-accent: #4F8CFF;
 
-  --color-success: #34d399;
-  --color-warning: #fbbf24;
-  --color-danger: #fb7185;
-  --color-danger-strong: #ef4444;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-danger-strong: #EF4444;
   --color-info: #38bdf8;
 
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --border-focus: var(--color-primary);
+  --border-subtle: #1F2937;
+  --border-strong: #374151;
+  --border-focus: #4F8CFF;
+
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+
 
   --overlay-scrim: rgba(3, 4, 9, 0.72);
   --overlay-light: rgba(255, 255, 255, 0.04);
