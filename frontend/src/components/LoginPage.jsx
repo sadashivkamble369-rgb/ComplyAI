@@ -52,13 +52,8 @@ export default function LoginPage({ onLogin }) {
           <span className="brand-title">ComplyAI</span>
           <span className="brand-badge">Enterprise</span>
         </div>
-
-        <div className="login-nav-links">
-          <button type="button" className="btn-login-demo" onClick={handleDemoClick}>
-            Quick Demo Access
-          </button>
-        </div>
       </header>
+
 
       {/* Main Login Hero & Container */}
       <main className="login-hero-container">
@@ -182,24 +177,10 @@ export default function LoginPage({ onLogin }) {
               </button>
             </form>
 
-            <div className="login-divider">
-              <span>OR</span>
-            </div>
-
-            {/* SSO / One-Click Demo Options */}
-            <div className="sso-options-group">
-              <button type="button" className="btn-sso" onClick={onLogin}>
-                <Key size={15} /> Single Sign-On (SSO / Okta / Azure AD)
-              </button>
-
-              <button type="button" className="btn-one-click-demo" onClick={onLogin}>
-                <Globe size={15} /> Instant Demo Dashboard Access
-              </button>
-            </div>
-
-            <div className="login-card-footer">
+            <div className="login-card-footer" style={{ marginTop: "24px" }}>
               <Lock size={12} /> SOC 2 Type II Certified • 256-Bit SSL Encryption
             </div>
+
           </div>
         </div>
       </main>
