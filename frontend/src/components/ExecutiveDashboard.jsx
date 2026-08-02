@@ -16,7 +16,9 @@ import {
   FileCheck,
   Edit3,
   Calendar,
+  Download,
 } from "lucide-react";
+
 
 import {
   CircularGauge,
@@ -59,7 +61,10 @@ export default function ExecutiveDashboard({
   onOpenCopilot,
   onGenerateClause,
   onViewFixGap,
+  onDownloadPDF,
+  onNavigate,
 }) {
+
   const [copiedId, setCopiedId] = useState(null);
   const [completedDateTime, setCompletedDateTime] = useState(
     completedTimestamp || analysis?.completed_at || "02 Aug 2026, 07:23 AM"
@@ -73,17 +78,23 @@ export default function ExecutiveDashboard({
     }
   }, [analysis]);
 
-  const score = analysis?.compliance_score || 92;
-  const risk = analysis?.risk_level || "Medium";
+  const score = analysis?.compliance_score !== undefined ? Number(analysis.compliance_score) : 92;
+  const risk = analysis?.risk_level || (score >= 80 ? "Low" : score >= 60 ? "Medium" : "High");
 
-  const totalFindings = useCountUp(22, 1400);
-  const criticalFindings = useCountUp(5, 1200);
-  const highFindings = useCountUp(8, 1300);
-  const mediumFindings = useCountUp(9, 1400);
+  const rawCritical = analysis?.missing_requirements ? Math.min(analysis.missing_requirements.length, 12) : 5;
+  const rawHigh = analysis?.improved_clauses ? Math.min(analysis.improved_clauses.length, 15) : 8;
+  const rawMedium = analysis?.recommendations ? Math.min(analysis.recommendations.length, 15) : 9;
+  const rawTotal = rawCritical + rawHigh + rawMedium;
 
-  const highRiskPill = useCountUp(3, 1100);
-  const mediumRiskPill = useCountUp(7, 1250);
-  const lowRiskPill = useCountUp(12, 1400);
+  const totalFindings = useCountUp(rawTotal, 1400);
+  const criticalFindings = useCountUp(rawCritical, 1200);
+  const highFindings = useCountUp(rawHigh, 1300);
+  const mediumFindings = useCountUp(rawMedium, 1400);
+
+  const highRiskPill = useCountUp(rawCritical, 1100);
+  const mediumRiskPill = useCountUp(rawHigh, 1250);
+  const lowRiskPill = useCountUp(rawMedium, 1400);
+
 
   const handleCopy = (id, text) => {
     navigator.clipboard.writeText(text);
@@ -255,26 +266,61 @@ export default function ExecutiveDashboard({
               <span className="count-sub">Documents</span>
             </div>
             <div className="file-list">
-              <div className="file-item">
+              <div
+                className="file-item clickable-file-item"
+                onClick={() => {
+                  if (onDownloadPDF) {
+                    onDownloadPDF("improved_policy");
+                  } else if (onNavigate) {
+                    onNavigate("documents");
+                  }
+                }}
+                title={`Click to download/view ${companyPolicyName}`}
+                style={{
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                }}
+              >
                 <FileText size={15} className="file-icon" />
-                <div className="file-info">
+                <div className="file-info" style={{ flex: 1 }}>
                   <span className="file-name">{companyPolicyName}</span>
-                  <span className="file-meta">1.2 MB</span>
+                  <span className="file-meta" style={{ color: "#38bdf8" }}>Download Policy PDF</span>
                 </div>
-                <CheckCircle2 size={16} className="check-green" />
+                <Download size={15} style={{ color: "#38bdf8" }} />
               </div>
 
-              <div className="file-item">
+              <div
+                className="file-item clickable-file-item"
+                onClick={() => {
+                  if (onDownloadPDF) {
+                    onDownloadPDF("audit_report");
+                  } else if (onNavigate) {
+                    onNavigate("regulations");
+                  }
+                }}
+                title={`Click to download/view ${regulationName}`}
+                style={{
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                }}
+              >
                 <FileText size={15} className="file-icon" />
-                <div className="file-info">
+                <div className="file-info" style={{ flex: 1 }}>
                   <span className="file-name">{regulationName}</span>
-                  <span className="file-meta">1.3 MB</span>
+                  <span className="file-meta" style={{ color: "#38bdf8" }}>Download Regulation PDF</span>
                 </div>
-                <CheckCircle2 size={16} className="check-green" />
+                <Download size={15} style={{ color: "#38bdf8" }} />
               </div>
             </div>
           </div>
         </div>
+
       </div>
 
       {/* Middle Analytics Row: 3 Visualization Cards */}
@@ -285,10 +331,9 @@ export default function ExecutiveDashboard({
             <h3><span className="header-icon">📊</span> Compliance by Category</h3>
           </div>
           <div className="radar-card-content" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-            <RadarChart />
+            <RadarChart score={score} />
           </div>
         </div>
-
 
         {/* Card 2: Risk Distribution Donut */}
         <div className="analytics-card">
@@ -296,19 +341,19 @@ export default function ExecutiveDashboard({
             <h3><span className="header-icon">🍩</span> Risk Distribution</h3>
           </div>
           <div className="donut-card-content">
-            <DonutChart total={22} critical={5} high={8} medium={9} />
+            <DonutChart total={rawTotal} critical={rawCritical} high={rawHigh} medium={rawMedium} />
             <div className="donut-legend">
               <div className="legend-row">
                 <span className="legend-dot critical" />
-                <span className="legend-label">5 Critical (23%)</span>
+                <span className="legend-label">{rawCritical} Critical ({rawTotal > 0 ? Math.round((rawCritical / rawTotal) * 100) : 0}%)</span>
               </div>
               <div className="legend-row">
                 <span className="legend-dot high" />
-                <span className="legend-label">8 High (36%)</span>
+                <span className="legend-label">{rawHigh} High ({rawTotal > 0 ? Math.round((rawHigh / rawTotal) * 100) : 0}%)</span>
               </div>
               <div className="legend-row">
                 <span className="legend-dot medium" />
-                <span className="legend-label">9 Medium (41%)</span>
+                <span className="legend-label">{rawMedium} Medium ({rawTotal > 0 ? Math.round((rawMedium / rawTotal) * 100) : 0}%)</span>
               </div>
             </div>
           </div>
@@ -318,20 +363,22 @@ export default function ExecutiveDashboard({
         <div className="analytics-card">
           <div className="analytics-card-header">
             <h3><span className="header-icon">📈</span> Compliance Over Time</h3>
-            <span className="badge-trend-up">92%</span>
+            <span className="badge-trend-up">{score}%</span>
           </div>
           <div className="trend-card-content">
-            <TrendLineChart />
+            <TrendLineChart score={score} />
             <div className="trend-month-axis">
               <span>Jan</span>
               <span>Feb</span>
               <span>Mar</span>
               <span>Apr</span>
               <span>May</span>
+              <span>Jun</span>
             </div>
           </div>
         </div>
       </div>
+
 
       {/* Bottom Split Row: Top Gaps & AI Recommendations */}
       <div className="bottom-split-row">

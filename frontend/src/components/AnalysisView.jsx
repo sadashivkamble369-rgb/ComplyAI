@@ -17,8 +17,9 @@ export default function AnalysisView({ analysis, onViewFixGap }) {
   const [filterSeverity, setFilterSeverity] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const score = analysis?.compliance_score || 92;
-  const risk = analysis?.risk_level || "Medium";
+  const score = analysis?.compliance_score !== undefined ? Number(analysis.compliance_score) : 92;
+  const risk = analysis?.risk_level || (score >= 80 ? "Low" : score >= 60 ? "Medium" : "High");
+
   const missingReqs = analysis?.missing_requirements || [
     "Missing explicit clause for Data Protection Officer (DPO) under GDPR Article 37.",
     "72-Hour Security Incident & Breach Disclosure SLA not defined.",

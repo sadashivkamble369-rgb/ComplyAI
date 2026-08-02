@@ -31,7 +31,9 @@ export default function SidebarNav({
   onToggleSidebar,
   onLogout,
   userName = "Suryansh Pandey",
+  userEmail = "suryansh@gmail.com",
 }) {
+
 
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -163,13 +165,7 @@ export default function SidebarNav({
 
         {/* User Profile Footer (Directly below Upgrade Pro card) */}
         <div className="sidebar-user-footer" style={{ marginTop: "8px" }}>
-          <a
-            href="https://www.linkedin.com/in/suryansh-pandey-0a6505380"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ display: "flex", flex: 1, alignItems: "center", gap: "10px", textDecoration: "none" }}
-            title="View Suryansh Pandey's Public Profile on LinkedIn"
-          >
+          <div style={{ display: "flex", flex: 1, alignItems: "center", gap: "10px" }}>
             <img
               src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userName)}`}
               alt={userName}
@@ -178,10 +174,12 @@ export default function SidebarNav({
             {isOpen && (
               <div className="user-info">
                 <span className="user-name">{userName}</span>
-                <span className="user-email">suryansh@acme.com</span>
+                <span className="user-email">{userEmail || "suryansh@gmail.com"}</span>
               </div>
             )}
-          </a>
+
+          </div>
+
 
 
           {isOpen && onLogout && (

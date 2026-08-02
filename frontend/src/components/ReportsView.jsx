@@ -24,11 +24,12 @@ export default function ReportsView({ analysis, auditRef, onDownloadPDF }) {
   };
 
 
-  const score = analysis?.compliance_score || 92;
-  const risk = analysis?.risk_level || "Medium";
+  const score = analysis?.compliance_score !== undefined ? Number(analysis.compliance_score) : 92;
+  const risk = analysis?.risk_level || (score >= 80 ? "Low" : score >= 60 ? "Medium" : "High");
   const summaryText =
     analysis?.summary ||
     `The executive compliance analysis reveals an overall score of ${score}% (${risk} Risk). Core operational safeguards are referenced; however, key regulatory controls require formalization in the revised policy addendum.`;
+
 
   return (
     <div className="reports-view-root">

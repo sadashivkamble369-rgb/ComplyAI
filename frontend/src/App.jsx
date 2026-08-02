@@ -675,6 +675,7 @@ const OrganizationCard = ({ orgData, onFieldChange }) => (
               value={orgData.companySize}
               onChange={(event) => onFieldChange("companySize", event.target.value)}
             >
+              <option value="">Select company size...</option>
               {COMPANY_SIZES.map((size) => (
                 <option key={size.id} value={size.id}>
                   {size.label}
@@ -697,6 +698,7 @@ const OrganizationCard = ({ orgData, onFieldChange }) => (
               value={orgData.riskAppetite}
               onChange={(event) => onFieldChange("riskAppetite", event.target.value)}
             >
+              <option value="">Select risk appetite...</option>
               {RISK_APPETITES.map((risk) => (
                 <option key={risk.id} value={risk.id}>
                   {risk.label}
@@ -719,6 +721,7 @@ const OrganizationCard = ({ orgData, onFieldChange }) => (
               value={orgData.auditYear}
               onChange={(event) => onFieldChange("auditYear", event.target.value)}
             >
+              <option value="">Select audit year...</option>
               {AUDIT_YEARS.map((year) => (
                 <option key={year} value={year}>
                   {year}
@@ -728,6 +731,7 @@ const OrganizationCard = ({ orgData, onFieldChange }) => (
             <ChevronDown size={16} aria-hidden="true" className="select-chevron" />
           </div>
         </div>
+
 
         <MultiSelect
           id="compliance-framework"
@@ -847,7 +851,11 @@ const UploadCard = ({ id, label, description, file, onFileSelect, onRemove, acce
     (fileList) => {
       const picked = fileList && fileList[0];
       if (!picked) return;
-      if (picked.type !== "application/pdf") return;
+      const isPdf = picked.type === "application/pdf" || picked.name.toLowerCase().endsWith(".pdf");
+      if (!isPdf) {
+        alert("Please select a valid PDF file (.pdf)");
+        return;
+      }
       onFileSelect(picked);
     },
     [onFileSelect]
@@ -922,10 +930,11 @@ const UploadCard = ({ id, label, description, file, onFileSelect, onRemove, acce
         ref={inputRef}
         id={id}
         type="file"
-        accept="application/pdf"
+        accept="application/pdf,.pdf"
         className="sr-only"
         onChange={(event) => handleFiles(event.target.files)}
       />
+
     </div>
   );
 };
@@ -1298,16 +1307,17 @@ const Footer = () => (
    ROOT APP
 ================================================== */
 const DEFAULT_ORG_DATA = {
-  companyName: "Acme Global Enterprise",
-  industry: "Technology",
-  headquartersCountry: "United States",
-  expansionCountry: "United States",
-  state: "California",
-  companySize: COMPANY_SIZES[0].id,
-  complianceFrameworks: ["GDPR"],
-  riskAppetite: RISK_APPETITES[1].id,
-  auditYear: AUDIT_YEARS[1],
+  companyName: "",
+  industry: "",
+  headquartersCountry: "",
+  expansionCountry: "",
+  state: "",
+  companySize: "",
+  complianceFrameworks: [],
+  riskAppetite: "",
+  auditYear: "",
 };
+
 
 const formatCurrentDateTime = () => {
   const now = new Date();
@@ -1326,9 +1336,11 @@ const formatCurrentDateTime = () => {
 
 const App = () => {
   const [userName, setUserName] = useState("Suryansh Pandey");
+  const [userEmail, setUserEmail] = useState("suryansh@gmail.com");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginTimestamp, setLoginTimestamp] = useState(formatCurrentDateTime());
   const [activeTab, setActiveTab] = useState("dashboard"); // dashboard | platform | organization | workspace | report | documents | regulations | analysis | recommendations
+
 
 
 
@@ -1444,26 +1456,41 @@ const App = () => {
 
   const handlePDFDownload = async (type = "audit_report") => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/download/${type}?ref=${auditRef || "sample"}`, {
+      const isPolicyDoc = type.includes("policy") || type.includes("improved") || type.includes("revised");
+      let downloadEndpoint = isPolicyDoc
+        ? (analysis?.policy_pdf_url || `http://127.0.0.1:8000/download/improved_policy?ref=${auditRef || "complyai"}`)
+        : (analysis?.audit_report_url || `http://127.0.0.1:8000/download/audit_report?ref=${auditRef || "complyai"}`);
+
+      const filename = isPolicyDoc
+        ? `AI_Revised_Policy_${auditRef || "COMPLI-2026"}.pdf`
+        : `Executive_Audit_Report_${auditRef || "COMPLI-2026"}.pdf`;
+
+      const response = await axios.get(downloadEndpoint, {
         responseType: "blob",
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `${type}_${auditRef || "complyai"}.pdf`);
+      link.setAttribute("download", filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (e) {
-      window.print();
+      console.error("PDF Download Error:", e);
+      alert("Failed to download PDF report. Please ensure backend server is running.");
     }
   };
+
 
   if (!isAuthenticated) {
     return (
       <LoginPage
-        onLogin={(name) => {
+        onLogin={(name, email) => {
           if (name) setUserName(name);
+          if (email) setUserEmail(email);
           setLoginTimestamp(formatCurrentDateTime());
           setIsAuthenticated(true);
           setActiveTab("dashboard");
@@ -1486,7 +1513,9 @@ const App = () => {
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         onLogout={() => setIsAuthenticated(false)}
         userName={userName}
+        userEmail={userEmail}
       />
+
 
 
       {/* Main Content Area */}
@@ -1519,8 +1548,11 @@ const App = () => {
               onOpenCopilot={() => {}}
               onGenerateClause={() => setActiveTab("recommendations")}
               onViewFixGap={() => setActiveTab("analysis")}
+              onDownloadPDF={handlePDFDownload}
+              onNavigate={(view) => setActiveTab(view)}
             />
           )}
+
 
 
           {/* TAB 1: DEDICATED AUDIT & RISK ANALYSIS VIEW */}

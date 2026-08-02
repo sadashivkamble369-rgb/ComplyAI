@@ -9,23 +9,33 @@ import {
   Key,
   Globe,
   User,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import "./LoginPage.css";
 
 export default function LoginPage({ onLogin }) {
-  const [userName, setUserName] = useState("Suryansh Pandey");
-  const [email, setEmail] = useState("suryansh@acme.com");
-  const [password, setPassword] = useState("••••••••••••");
+  const [userName, setUserName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (onLogin) onLogin(userName);
+    if (!userName.trim()) return;
+    const finalEmail = email.trim() || "suryansh@gmail.com";
+    if (onLogin) onLogin(userName.trim(), finalEmail);
   };
 
   const handleDemoClick = () => {
-    if (onLogin) onLogin(userName);
+    const finalName = userName.trim() || "Suryansh Pandey";
+    const finalEmail = email.trim() || "suryansh@gmail.com";
+    if (onLogin) onLogin(finalName, finalEmail);
   };
+
 
   return (
     <div className="login-page-root">
@@ -124,25 +134,47 @@ export default function LoginPage({ onLogin }) {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@company.com"
+                    placeholder="suryansh@gmail.com"
                   />
                 </div>
               </div>
 
-
               <div className="form-group">
                 <label>Password</label>
-                <div className="input-wrap">
+                <div className="input-wrap" style={{ position: "relative" }}>
                   <Lock size={16} className="input-icon" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
+                    style={{ paddingRight: "40px" }}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    title={showPassword ? "Hide password" : "Show password"}
+                    style={{
+                      position: "absolute",
+                      right: "12px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      color: "#94a3b8",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 0,
+                    }}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
               </div>
+
 
               <button type="submit" className="btn-submit-login" disabled={isLoading}>
                 {isLoading ? "Authenticating..." : "Sign In to ComplyAI"}

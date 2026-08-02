@@ -6,10 +6,13 @@ function PdfField({ exhibitLabel, title, file, onFileSelected, error }) {
   const inputRef = useRef(null);
  
   const acceptFile = (candidate) => {
-    if (candidate && candidate.type === "application/pdf") {
+    if (!candidate) return;
+    const isPdf = candidate.type === "application/pdf" || candidate.name.toLowerCase().endsWith(".pdf");
+    if (isPdf) {
       onFileSelected(candidate);
     }
   };
+
  
   return (
     <div
